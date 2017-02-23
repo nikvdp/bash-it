@@ -33,10 +33,17 @@ else
 fi
 
 parse_git_dirty () {
-  [[ $(git status 2> /dev/null | tail -n1 | cut -c 1-17) != "nothing to commit" ]] && echo "*"
+    [[ $(git status 2> /dev/null | tail -n1 | cut -c 1-17) != "nothing to commit" ]] && echo "*"
 }
 parse_git_branch () {
-  git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
+    git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
+}
+
+color_parse_git_branch() {
+    local branch="$(parse_git_branch)"
+    if [[ -n "$branch" ]]; then
+        echo "${white}(\[$PURPLE\]${branch}$white) "
+    fi
 }
 
 conditional_py_prompt() {
@@ -47,11 +54,9 @@ conditional_py_prompt() {
 }
 
 function prompt_command() {
-# 
-
-  # PS1="\[$GREEN\]\w\[${BOLD}${MAGENTA}\]  \[$WHITE\]at \[$ORANGE\]\h \[$WHITE\]\[$WHITE\]\$([[ -n \$(git branch 2> /dev/null) ]] && echo \" on \")\[$PURPLE\]\$(parse_git_branch)\[$WHITE\]\n\$ \[$RESET\]"
-  PS1="\[$bold_blue\]\u[$white\]@[$blue\]$prompt_hostname:\[$green\]\w\n$([[ -n $DEFAULT_CONDA_ENV ]] && echo '('$DEFAULT_CONDA_ENV') ')\$ \[$RESET\]" #color command prompt
-    PS1="\n${green}\w ${cyan}$(conditional_py_prompt)${white} on ${purple}\h ${reset_color}${white}(\[$PURPLE\]\$(parse_git_branch)$white) ${green}\n${prompt_thingy}${reset_color} "
+    local line1="${green}\w ${white}on ${purple}\h ${reset_color}$(color_parse_git_branch)"
+    local line2="${cyan}$(conditional_py_prompt) ${green}${prompt_thingy}${reset_color} "
+    PS1="$line1\n$line2"
 }
 
 safe_append_prompt_command prompt_command
