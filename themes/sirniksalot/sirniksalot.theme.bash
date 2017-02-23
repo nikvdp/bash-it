@@ -55,8 +55,8 @@ conditional_py_prompt() {
 
 function prompt_command() {
     local line1="${green}\w ${white}on ${purple}\h ${reset_color}$(color_parse_git_branch)"
-    local line2="${cyan}$(conditional_py_prompt) ${green}${prompt_thingy}${reset_color} "
-    PS1="$line1\n$line2"
+    local line2="${cyan}$(conditional_py_prompt)${green}${prompt_thingy}${reset_color} "
+    PS1="\n$line1\n$line2"
 }
 
 safe_append_prompt_command prompt_command
