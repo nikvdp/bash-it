@@ -54,9 +54,32 @@ conditional_py_prompt() {
 }
 
 function prompt_command() {
-    local line1="${green}\w ${white}on ${purple}\h ${reset_color}$(color_parse_git_branch)"
-    local line2="${cyan}$(conditional_py_prompt)${green}${prompt_thingy}${reset_color} "
+    local last_cmd_exit=$?
+    local last_cmd_success="${green}"
+    local last_cmd_fail="$red"
+    local full_reset="$(tput sgr0)"
+
+    local cmd_status=$last_cmd_success
+    local status_prompt_thingy="$prompt_thingy"
+
+    local police=$'\xf0\x9f\x9a\x94'" "
+    local bell=$'\xf0\x9f\x9a\xa8'" "
+
+    local alert_msg=
+
+    if [[ "$last_cmd_exit" -ne "0" ]]; then
+        cmd_status=$last_cmd_fail
+        alert_msg="${bell} ${police} ${bell} "
+    fi
+
+    local line1="${alert_msg}${cmd_status}\w ${white}on ${purple}\h ${reset_color}$(color_parse_git_branch)"
+    local line2="${cyan}$(conditional_py_prompt)${cmd_status}${status_prompt_thingy}${full_reset} "
     PS1="\n$line1\n$line2"
+}
+
+function emoji-to-bash-escape-seq () {
+    local emoji="$1"
+    echo -n "$emoji" | hexdump | head -1 | sed -e 's/^0* /\\x/g' -e 's/[ ]*$//g' -e 's/ /\\x/g' -e "s/^/\\$'/" -e "s/\$/'/" 
 }
 
 safe_append_prompt_command prompt_command
