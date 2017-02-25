@@ -27,13 +27,22 @@ get-public-key-from-private() {
 }
 
 get-agent-fingerprints() {
-    ssh-add -l | cut -d ' ' -f 2
+    ssh-add -l 2>/dev/null | cut -d ' ' -f 2 
 }
 
 
 start-agent-if-unstarted() {
+    local hostname="$(hostname | sed 's/\..*//')"
+
+    # if we found ssh auth settings from a previous run, use those
+    if [[ -f ~/.ssh/bash-it-ssh-agent ]]; then
+        source ~/.ssh/bash-it-ssh-agent &>/dev/null
+    fi
+
+    # otherwise start a new agent
     if ! ssh-add -l &>/dev/null; then
-        eval "$(ssh-agent)"
+        ssh-agent > ~/.ssh/bash-it-ssh-agent
+        source ~/.ssh/bash-it-ssh-agent &>/dev/null
     fi
 }
 
@@ -48,7 +57,7 @@ add-identities () {
             if [[ "$(uname)" == "Darwin" ]]; then
                 optional_params="-K "
             fi
-            ssh-add $optional_params $id_file
+            ssh-add $optional_params $id_file &> /dev/null
         fi
     done
 
@@ -61,6 +70,9 @@ add-identities () {
 
 # if agent is already running then just try to add identities to it. If that doesn't work
 # then attempt to start it and then add identities
-add-identities || (start-agent-if-unstarted && add-identities)
+add-identities || {
+    start-agent-if-unstarted &&
+        add-identities
+}
 
         
