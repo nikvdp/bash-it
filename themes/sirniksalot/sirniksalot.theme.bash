@@ -49,7 +49,7 @@ color_parse_git_branch() {
 conditional_py_prompt() {
     local py_color="$cyan"
     if [[ -n "$(condaenv_prompt)$(virtualenv_prompt)" ]]; then
-        echo -e "${py_color}($(condaenv_prompt)$(virtualenv_prompt):${py_color}$(py_interp_prompt))"
+        echo -e "${py_color}($(condaenv_prompt)$(virtualenv_prompt):${py_color}$(py_interp_prompt)) "
     fi
 }
 
