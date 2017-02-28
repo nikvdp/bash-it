@@ -55,11 +55,11 @@ conditional_py_prompt() {
 
 function prompt_command() {
     local last_cmd_exit=$?
-    local last_cmd_success="${green}"
-    local last_cmd_fail="$red"
+    local last_cmd_success_color="${green}"
+    local last_cmd_fail_color="$red"
     local full_reset="$(tput sgr0)"
 
-    local cmd_status=$last_cmd_success
+    local cmd_status=$last_cmd_success_color
     local status_prompt_thingy="$prompt_thingy"
 
     local police=$'\xf0\x9f\x9a\x94'" "
@@ -68,13 +68,13 @@ function prompt_command() {
     local alert_msg=
 
     if [[ "$last_cmd_exit" -ne "0" ]]; then
-        cmd_status=$last_cmd_fail
+        cmd_status=$last_cmd_fail_color
         alert_msg="${bell} ${police} ${bell} "
     fi
 
     local line1="${alert_msg}${cmd_status}\w ${white}on ${purple}\h ${reset_color}$(color_parse_git_branch)"
-    local line2="${cyan}$(conditional_py_prompt)${cmd_status}${status_prompt_thingy}${full_reset} "
-    PS1="\n$line1\n$line2"
+    local line2="${cyan}$(conditional_py_prompt)${cmd_status}${status_prompt_thingy}${reset_color} "
+    PS1="\n$line1\n\r     \r$line2"
 }
 
 function emoji-to-bash-escape-seq () {
