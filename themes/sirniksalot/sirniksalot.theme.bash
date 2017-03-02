@@ -42,12 +42,15 @@ parse_git_branch () {
 color_parse_git_branch() {
     local branch="$(parse_git_branch)"
     if [[ -n "$branch" ]]; then
-        echo "${white}(\[$PURPLE\]${branch}$white) "
+        # \001 and \002 are equivalent to \[ and \], and are used to help bash count non-printable chr
+        # length properly
+        # (see http://stackoverflow.com/questions/19092488/custom-bash-prompt-is-overwriting-itself)
+        echo "\001${white}\002(\001$PURPLE\002${branch}\001$white\002) "
     fi
 }
 
 conditional_py_prompt() {
-    local py_color="$cyan"
+    local py_color="\001$cyan\002"
     if [[ -n "$(condaenv_prompt)$(virtualenv_prompt)" ]]; then
         echo -e "${py_color}($(condaenv_prompt)$(virtualenv_prompt):${py_color}$(py_interp_prompt)) "
     fi
@@ -57,10 +60,10 @@ function prompt_command() {
     local last_cmd_exit=$?
     local last_cmd_success_color="${green}"
     local last_cmd_fail_color="$red"
-    local full_reset="$(tput sgr0)"
+    local full_reset="\001$(tput sgr0)\002"
 
-    local cmd_status=$last_cmd_success_color
-    local status_prompt_thingy="$prompt_thingy"
+    local cmd_status="$last_cmd_success_color"
+    local status_prompt_thingy="\001${prompt_thingy}\002"
 
     local police=$'\xf0\x9f\x9a\x94'" "
     local bell=$'\xf0\x9f\x9a\xa8'" "
@@ -69,11 +72,11 @@ function prompt_command() {
 
     if [[ "$last_cmd_exit" -ne "0" ]]; then
         cmd_status=$last_cmd_fail_color
-        alert_msg="${bell} ${police} ${bell} "
+        alert_msg="\001${bell} ${police} ${bell}\002 "
     fi
 
     local line1="${alert_msg}${cmd_status}\w ${white}on ${purple}\h ${reset_color}$(color_parse_git_branch)"
-    local line2="${cyan}$(conditional_py_prompt)${cmd_status}${status_prompt_thingy}${reset_color} "
+    local line2="${cyan}$(conditional_py_prompt)${cmd_status}${status_prompt_thingy}${full_reset} "
     PS1="\n$line1\n\r     \r$line2"
 }
 
