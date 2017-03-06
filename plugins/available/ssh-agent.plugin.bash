@@ -1,6 +1,5 @@
-cite ssh-agent-plugin
+cite about-plugin
 about-plugin 'Automatically start ssh-agent'
-
 
 load-fingerprints-and-ids () {
     export fingerprints=
