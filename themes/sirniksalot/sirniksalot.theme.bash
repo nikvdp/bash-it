@@ -1,36 +1,4 @@
-# Sexy Bash Prompt, inspired by "Extravagant Zsh Prompt"
-# Screenshot: http://cloud.gf3.ca/M5rG
-# A big thanks to \amethyst on Freenode
 
-if [[ $COLORTERM = gnome-* && $TERM = xterm ]]  && infocmp gnome-256color >/dev/null 2>&1; then export TERM=gnome-256color
-elif [[ $TERM != dumb ]] && infocmp xterm-256color >/dev/null 2>&1; then export TERM=xterm-256color
-fi
-
-if tput setaf 1 &> /dev/null; then
-    if [[ $(tput colors) -ge 256 ]] 2>/dev/null; then
-      MAGENTA=$(tput setaf 9)
-      ORANGE=$(tput setaf 172)
-      GREEN=$(tput setaf 190)
-      PURPLE=$(tput setaf 141)
-      WHITE=$(tput setaf 0)
-    else
-      MAGENTA=$(tput setaf 5)
-      ORANGE=$(tput setaf 4)
-      GREEN=$(tput setaf 2)
-      PURPLE=$(tput setaf 1)
-      WHITE=$(tput setaf 7)
-    fi
-    BOLD=$(tput bold)
-    RESET=$(tput sgr0)
-else
-    MAGENTA="\033[1;31m"
-    ORANGE="\033[1;33m"
-    GREEN="\033[1;32m"
-    PURPLE="\033[1;35m"
-    WHITE="\033[1;37m"
-    BOLD=""
-    RESET="\033[m"
-fi
 
 parse_git_dirty () {
     [[ $(git status 2> /dev/null | tail -n1 | cut -c 1-17) != "nothing to commit" ]] && echo "*"
@@ -45,7 +13,7 @@ color_parse_git_branch() {
         # \001 and \002 are equivalent to \[ and \], and are used to help bash count non-printable chr
         # length properly
         # (see http://stackoverflow.com/questions/19092488/custom-bash-prompt-is-overwriting-itself)
-        echo "\001${white}\002(\001$PURPLE\002${branch}\001$white\002) "
+        echo "${white}($PURPLE${branch}$white) "
     fi
 }
 
@@ -59,24 +27,80 @@ conditional_py_prompt() {
 function prompt_command() {
     local last_cmd_exit=$?
     local last_cmd_success_color="${green}"
-    local last_cmd_fail_color="$red"
-    local full_reset="\001$(tput sgr0)\002"
+    local last_cmd_fail_color="${red}"
+    local full_reset="$(tput sgr0)"
 
-    local cmd_status="$last_cmd_success_color"
-    local status_prompt_thingy="\001${prompt_thingy}\002"
+    local cmd_status_color="$last_cmd_success_color"
 
-    local police=$'\xf0\x9f\x9a\x94'" "
-    local bell=$'\xf0\x9f\x9a\xa8'" "
+    local police_emoji=$'\xf0\x9f\x9a\x94'" "
+    local bell_emoji=$'\xf0\x9f\x9a\xa8'" "
 
-    local alert_msg=
+    local fail_status_alert_msg="${bell_emoji} ${police_emoji} ${bell_emoji} "
+
+    local line1_arr=()
 
     if [[ "$last_cmd_exit" -ne "0" ]]; then
-        cmd_status=$last_cmd_fail_color
-        alert_msg="\001${bell} ${police} ${bell}\002 "
+        cmd_status_color="$last_cmd_fail_color"
     fi
 
-    local line1="${alert_msg}${cmd_status}\w ${white}on ${purple}\h ${reset_color}$(color_parse_git_branch)"
-    local line2="${cyan}$(conditional_py_prompt)${cmd_status}${status_prompt_thingy}${full_reset} "
+    line1_arr+=(
+        ${cmd_status_color}
+        '\w'  # current path
+        ${white}
+        ' on '
+        ${purple}
+        ' \h '  # hostname
+    )
+
+    # append git branch status if we're in a git branch
+    local branch="$(parse_git_branch)"
+    if [[ -n "$branch" ]]; then
+        line1_arr+=(
+            ${white}
+            '('
+            ${purple}
+            ${branch}
+            ${white}
+            ')'
+        )
+    fi
+
+    # append python virtualenv info if in a virtualenv
+    local python=$(condaenv_prompt)$(virtualenv_prompt)  # only one of these will be filled at a time
+    if [[ -n "$python" ]]; then
+        line1_arr+=(
+            ${cyan}
+            ${py_color}
+            '('
+            ${python}  
+            ':'
+            ${cyan}
+            $(py_interp_prompt)  # python interpreter (from bash-it)
+            ') '
+        )
+        fi
+
+    local line2_arr=(
+        $cmd_status_color
+        '['
+        $prompt_thingy
+        ' ] '
+    )
+    
+
+    line1_arr+=($full_reset)
+    line2_arr+=($full_reset)
+
+    local line1=
+    for i in "${line1_arr[@]}"; do
+        line1="${line1}\\[$i\\]"
+    done
+
+    local line2=
+    for i in "${line2_arr[@]}"; do
+        line2="${line2}\\[$i\\]"
+    done
+
     PS1="\n$line1\n\r     \r$line2"
 }
 
