@@ -32,15 +32,19 @@ function prompt_command() {
 
     local cmd_status_color="$last_cmd_success_color"
 
-    local police_emoji=$'\xf0\x9f\x9a\x94'" "
-    local bell_emoji=$'\xf0\x9f\x9a\xa8'" "
+    local police_emoji="🚔 "
+    local bell_emoji="🚨 "
 
-    local fail_status_alert_msg="${bell_emoji} ${police_emoji} ${bell_emoji} "
 
     local line1_arr=()
 
     if [[ "$last_cmd_exit" -ne "0" ]]; then
         cmd_status_color="$last_cmd_fail_color"
+        line1_arr+=(
+            "${bell_emoji} "
+            "${police_emoji} "
+            "${bell_emoji} "
+        )
     fi
 
     line1_arr+=(
@@ -81,10 +85,9 @@ function prompt_command() {
         fi
 
     local line2_arr=(
-        $cmd_status_color
-        '['
-        $prompt_thingy
-        ' ] '
+        ${cmd_status_color}'['
+        "$prompt_thingy"
+        ']'${full_reset}
     )
     
 
@@ -101,7 +104,7 @@ function prompt_command() {
         line2="${line2}\\[$i\\]"
     done
 
-    PS1="\n$line1\n\r     \r$line2"
+    PS1="\n$line1\[\n\]\[$line2 \]"
 }
 
 function emoji-to-bash-escape-seq () {
