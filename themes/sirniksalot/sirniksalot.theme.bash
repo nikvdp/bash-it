@@ -11,7 +11,7 @@ function prompt_command() {
     local last_cmd_exit=$?
     local last_cmd_success_color="${green}"
     local last_cmd_fail_color="${red}"
-    local full_reset="\[$(tput sgr0)\]"
+    local full_reset="${reset_color}"
 
     local cmd_status_color="$last_cmd_success_color"
 
@@ -34,9 +34,10 @@ function prompt_command() {
         ${cmd_status_color}
         '\w'  # current path
         ${white}
-        ' on '
+        ' on'
         ${purple}
-        ' \h '  # hostname
+        ' \h'  # hostname
+        ' '
     )
 
     # append git branch status if we're in a git branch
@@ -57,7 +58,6 @@ function prompt_command() {
     if [[ -n "$python" ]]; then
         line1_arr+=(
             ${cyan}
-            ${py_color}
             '('
             ${python}  
             ':'
@@ -88,7 +88,7 @@ function prompt_command() {
     done
 
     # PS1="\[\n\]$line1\[\n\]$line2"
-    PS1="\n${line1_arr[@]}\n${line2}"
+    PS1="\n${line1}\n${line2}"
 }
 
 function emoji-to-bash-escape-seq () {
