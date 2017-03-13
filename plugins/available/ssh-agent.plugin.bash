@@ -39,7 +39,8 @@ start-agent-if-unstarted() {
     fi
 
     # otherwise start a new agent
-    if ! ssh-add -l &>/dev/null; then
+    # if ! ssh-add -l &>/dev/null; then
+    if ! kill -0 $SSH_AGENT_PID; then
         ssh-agent > ~/.ssh/bash-it-ssh-agent
         source ~/.ssh/bash-it-ssh-agent &>/dev/null
     fi
