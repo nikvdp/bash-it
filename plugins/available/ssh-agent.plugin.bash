@@ -1,10 +1,20 @@
 cite about-plugin
 about-plugin 'Automatically start ssh-agent'
 
+dohdoh() {
+    while read id_file; do
+        fingerprints="$id_file $(key-to-fingerprint "$id_file")\n$fingerprints"
+    done < <(ls ~/.ssh/id* | grep -v '\.pub$')
+
+    echo -e $fingerprints | sed '/^$/d'
+}
+
 load-fingerprints-and-ids () {
     export fingerprints=
+    local pw
 
     while read id_file; do
+        read -sp "Password for key $id_file: " pw
         fingerprints="$id_file $(key-to-fingerprint "$id_file")\n$fingerprints"
     done < <(ls ~/.ssh/id* | grep -v '\.pub$')
 
@@ -14,8 +24,11 @@ load-fingerprints-and-ids () {
 key-to-fingerprint() {
     local id_file="$1"
     if [[ ! -f "$id_file.pub" ]]; then
-        get-public-key-from-private "$id_file" > "$id_file.pub"
-        chmod 600 "$id_file.pub"
+        read -p "No public key found for key $id_file. Try to create one? (y/n)" create
+        [[ create == [yY]* ]] && {
+            get-public-key-from-private "$id_file" > "$id_file.pub"
+            chmod 600 "$id_file.pub"
+        }
     fi
     ssh-keygen -lf "$id_file.pub" | cut -d ' ' -f 2
 }
@@ -38,9 +51,8 @@ start-agent-if-unstarted() {
         source ~/.ssh/bash-it-ssh-agent &>/dev/null
     fi
 
-    # otherwise start a new agent
-    # if ! ssh-add -l &>/dev/null; then
-    if ! kill -0 $SSH_AGENT_PID; then
+    # start a new agent if agent is not running at saved pid
+    if ! kill -0 $SSH_AGENT_PID &> /dev/null; then
         ssh-agent > ~/.ssh/bash-it-ssh-agent
         source ~/.ssh/bash-it-ssh-agent &>/dev/null
     fi
@@ -51,7 +63,6 @@ add-identities () {
         set -- $fingerprint_and_id
         local id_file="$1"
         local fingerprint="$2"
-        # echo "Fingerprint=[$fingerprint], id_file=[$id_file]"
         if ! get-agent-fingerprints | grep -q $fingerprint; then
             local optional_params=
             if [[ "$(uname)" == "Darwin" ]]; then
