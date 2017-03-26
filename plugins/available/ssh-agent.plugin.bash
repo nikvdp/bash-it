@@ -59,6 +59,9 @@ start-agent-if-unstarted() {
 }
 
 add-identities () {
+    # dont do anyyhing if agent already has keys
+    ssh-add -l &> /dev/null && return 0
+
     load-fingerprints-and-ids | while read fingerprint_and_id; do 
         set -- $fingerprint_and_id
         local id_file="$1"
