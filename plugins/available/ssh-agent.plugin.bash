@@ -60,25 +60,27 @@ start-agent-if-unstarted() {
 
 add-identities () {
     # dont do anyyhing if agent already has keys
-    ssh-add -l &> /dev/null && return 0
-
-    load-fingerprints-and-ids | while read fingerprint_and_id; do 
-        set -- $fingerprint_and_id
-        local id_file="$1"
-        local fingerprint="$2"
-        if ! get-agent-fingerprints | grep -q $fingerprint; then
-            local optional_params=
-            if [[ "$(uname)" == "Darwin" ]]; then
-                optional_params="-K "
+    if ssh-add -l &> /dev/null; then
+        return 0
+    else
+        load-fingerprints-and-ids | while read fingerprint_and_id; do 
+            set -- $fingerprint_and_id
+            local id_file="$1"
+            local fingerprint="$2"
+            if ! get-agent-fingerprints | grep -q $fingerprint; then
+                local optional_params=
+                if [[ "$(uname)" == "Darwin" ]]; then
+                    optional_params="-K "
+                fi
+                ssh-add $optional_params $id_file &> /dev/null
             fi
-            ssh-add $optional_params $id_file &> /dev/null
-        fi
-    done
+        done
 
-    # re-run ssh-add, so that it's exit code becomes this function's
-    # exit code. if ssh-add's exit code is non-zero that means that either
-    # we didn't add any ids or that ssh-add couldn't connect to the agent
-    ssh-add -l &> /dev/null
+        # re-run ssh-add, so that it's exit code becomes this function's
+        # exit code. if ssh-add's exit code is non-zero that means that either
+        # we didn't add any ids or that ssh-add couldn't connect to the agent
+        ssh-add -l &> /dev/null
+    fi
 }
 
 
