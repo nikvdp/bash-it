@@ -17,6 +17,8 @@ function prompt_command() {
 
     local police_emoji="🚔 "
     local bell_emoji="🚨 "
+          police_emoji=" oO "
+          bell_emoji="Oo"
 
 
     local line1_arr=()
@@ -24,6 +26,7 @@ function prompt_command() {
     if [[ "$last_cmd_exit" -ne "0" ]]; then
         cmd_status_color="$last_cmd_fail_color"
         line1_arr+=(
+            "$last_cmd_fail_color"
             "${bell_emoji} "
             "${police_emoji} "
             "${bell_emoji} "
