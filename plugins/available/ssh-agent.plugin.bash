@@ -30,7 +30,9 @@ key-to-fingerprint() {
             chmod 600 "$id_file.pub"
         }
     fi
-    ssh-keygen -lf "$id_file.pub" | cut -d ' ' -f 2
+    if [[ -f "$id_file.pub" ]]; then
+        ssh-keygen -lf "$id_file.pub" | cut -d ' ' -f 2
+    fi
 }
 
 get-public-key-from-private() {
@@ -66,7 +68,7 @@ add-identities () {
         load-fingerprints-and-ids | while read fingerprint_and_id; do 
             set -- $fingerprint_and_id
             local id_file="$1"
-            local fingerprint="$2"
+            local fingerprint="${2:-NO_FINGERPRINT}"
             if ! get-agent-fingerprints | grep -q $fingerprint; then
                 local optional_params=
                 if [[ "$(uname)" == "Darwin" ]]; then
